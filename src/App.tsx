@@ -203,7 +203,6 @@ export function Grouping() {
 
   const sortedRows = useMemo((): readonly any[] => {
     if (sortDirection === 'NONE') return rows;
-    console.log('sort ccc==>>', sortColumn)
     let sortedRows: any[] = [...rows];
 
     switch (sortColumn) {
