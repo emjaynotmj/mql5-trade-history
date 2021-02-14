@@ -4,78 +4,11 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import Select, { components } from 'react-select';
 import type { ValueType, OptionsType, Props as SelectProps } from 'react-select';
 import { SortableContainer, SortableElement } from 'react-sortable-hoc';
-import { css } from '@linaria/core';
-
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import DataGrid, { HeaderRendererProps, SortDirection } from 'react-data-grid';
 
 import { DraggableHeaderRenderer } from './HeaderRenderers';
-import DataGrid, { SelectColumn, Column, HeaderRendererProps, SortDirection } from 'react-data-grid';
-//import type { Column } from 'react-data-grid';
-
-// const groupingClassname = css`
-//   display: flex;
-//   flex-direction: column;
-//   height: 100%;
-//   gap: 10px;
-
-//   > .rdg {
-//     flex: 1;
-//   }
-// `;
-
-//const sports = ['Swimming', 'Gymnastics', 'Speed Skating', 'Cross Country Skiing', 'Short-Track Speed Skating', 'Diving', 'Cycling', 'Biathlon', 'Alpine Skiing', 'Ski Jumping', 'Nordic Combined', 'Athletics', 'Table Tennis', 'Tennis', 'Synchronized Swimming', 'Shooting', 'Rowing', 'Fencing', 'Equestrian', 'Canoeing', 'Bobsleigh', 'Badminton', 'Archery', 'Wrestling', 'Weightlifting', 'Waterpolo', 'Wrestling', 'Weightlifting'];
-
-const columns: readonly Column<any>[] = [
-  SelectColumn,
-  {
-    key: 'country',
-    name: 'Country'
-  },
-  {
-    key: 'year',
-    name: 'Year'
-  },
-  {
-    key: 'sport',
-    name: 'Sport'
-  },
-  {
-    key: 'athlete',
-    name: 'Athlete'
-  },
-  {
-    key: 'gold',
-    name: 'Gold',
-    groupFormatter({ childRows }) {
-      return <>{childRows.reduce((prev, { gold }) => prev + gold, 0)}</>;
-    }
-  },
-  {
-    key: 'silver',
-    name: 'Silver',
-    groupFormatter({ childRows }) {
-      return <>{childRows.reduce((prev, { silver }) => prev + silver, 0)}</>;
-    }
-  },
-  {
-    key: 'bronze',
-    name: 'Bronze',
-    groupFormatter({ childRows }) {
-      return <>{childRows.reduce((prev, { silver }) => prev + silver, 0)}</>;
-    }
-  },
-  {
-    key: 'total',
-    name: 'Total',
-    formatter({ row }) {
-      return <>{row.gold + row.silver + row.bronze}</>;
-    },
-    groupFormatter({ childRows }) {
-      return <>{childRows.reduce((prev, row) => prev + row.gold + row.silver + row.bronze, 0)}</>;
-    }
-  }
-];
 
 function rowKeyGetter(row: any) {
   return row.Id;
@@ -99,7 +32,6 @@ const options: OptionsType<any> = [
 ];
 
 export function Grouping() {
-  const [loss, setLoss] = useState([] as any);
   const [file, setFile] = useState(null as any);
   const [columns, setColumns] = useState([] as any[]);
   const [rows, setRows] = useState([]);
@@ -138,19 +70,18 @@ export function Grouping() {
   }
 
   const setData = (jsonArr: any) => {
-    const newRows = jsonArr.map((e: any, i: number) => ({ ...e, CloseDay: moment(e.CloseTime).format('ddd, YYYY-MM-DD'), Id: i, Duration: moment(e.CloseTime).diff(moment(e.OpenTime), 'days') + 1 })).filter((i: any) => i.Type !== 'Balance');
+    const newRows = jsonArr.map((e: any, i: number) => ({ ...e, CloseDay: moment(e.CloseTime).format('ddd, YYYY-MM-DD'), Id: i, Duration_In_Days: moment(e.CloseTime).diff(moment(e.OpenTime), 'days') + 1 })).filter((i: any) => i.Type !== 'Balance');
     setColumns(Object.keys(newRows[0]).filter(i => !['Id', 'S/L', 'T/P', 'Commission', 'Swap'].includes(i)).map(i => ({
       key: i, name: i,
       groupFormatter: i === 'Profit' ? ({ childRows }: { childRows: any }) => {
         const val = childRows.reduce((prev: any, { Profit }: { Profit: any }) => parseFloat(prev) + parseFloat(Profit || 0), 0).toFixed(2);
-        if (val < 0 && !loss.includes(val)) setLoss((l: any) => l.concat(val));
         return <strong className={val > 0 ? 'profit' : 'loss'} style={{ color: 'white', backgroundColor: val > 0 ? 'green' : 'red' }} >{val}</strong>;
       }
-        : i === 'Duration' ? ({ childRows }: { childRows: any }) => <strong>{Math.max(...childRows.map((r: any) => parseInt(r.Duration)))}</strong> : null,
-      formatter: ({ column, row }: { row: any, column: any }) => ['Duration'].includes(column.key) ? null : ['OpenTime', 'CloseTime'].includes(column.key) ? moment(row[column.key]).format('ddd, MM-DD HH:MM') : row[column.key]
+        : i === 'Duration_In_Days' ? ({ childRows }: { childRows: any }) => <strong>{Math.max(...childRows.map((r: any) => parseInt(r.Duration_In_Days)))}</strong> : null,
+      formatter: ({ column, row }: { row: any, column: any }) => ['Duration_In_Days'].includes(column.key) ? null : ['OpenTime', 'CloseTime'].includes(column.key) ? moment(row[column.key]).format('ddd, MM-DD HH:MM') : row[column.key]
     })).concat({
       key: 'total',
-      name: 'Total Orders',
+      name: 'No of Positions',
       formatter() {
         return <></>;
       },
@@ -219,7 +150,7 @@ export function Grouping() {
       case 'ClosePrice':
       case 'Commission':
       case 'Swap':
-      case 'Duration':
+      case 'Duration_In_Days':
       case 'total':
       case 'Profit':
         sortedRows = sortedRows.sort((a, b) => a[sortColumn] - b[sortColumn]);
@@ -239,8 +170,6 @@ export function Grouping() {
           <button>Upload</button>
         </form>
       </div>
-
-      {/* <h1>{loss}</h1> */}
 
       <label style={{ width: 400 }}>
         <b>Group by</b> (drag to sort)
