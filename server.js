@@ -26,4 +26,12 @@ app.post('/api/upload', upload.single('csvFile'), async (req, res, next) => {
   }
 });
 
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(__dirname + '/build'));
+
+  app.get('*', (req, res) => {
+    res.sendFile(__dirname + '/build/index.html');
+  });
+}
+
 app.listen(port, () => console.log('server started on ', port));
