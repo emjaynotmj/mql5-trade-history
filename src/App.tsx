@@ -70,7 +70,7 @@ export function Grouping() {
   }
 
   const setData = (jsonArr: any) => {
-    const newRows = jsonArr.map((e: any, i: number) => ({ ...e, CloseDay: moment(e.CloseTime).format('ddd, YYYY-MM-DD'), Id: i, Duration_In_Days: moment(e.CloseTime).diff(moment(e.OpenTime), 'days') + 1 }))//.filter((i: any) => i.Type !== 'Balance');
+    const newRows = jsonArr.map((e: any, i: number) => ({ ...e, CloseDay: moment(e.CloseTime).format('ddd, YYYY-MM-DD'), Id: i, Duration_In_Days: moment(e.CloseTime).diff(moment(e.OpenTime), 'days') + 1 })).filter((i: any) => i.Type !== 'Balance');
     setColumns(Object.keys(newRows[0]).filter(i => !['Id', 'S/L', 'T/P', 'Commission', 'Swap'].includes(i)).map(i => ({
       key: i, name: i,
       groupFormatter: i === 'Profit' ? ({ childRows }: { childRows: any }) => {
