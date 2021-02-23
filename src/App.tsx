@@ -41,7 +41,7 @@ export function Grouping() {
   const [[sortColumn, sortDirection], setSort] = useState<[string, SortDirection]>(['OpenTime', 'NONE']);
 
   useEffect(() => {
-    const data = localStorage.getItem('data');
+    const data = sessionStorage.getItem('data');
     if (data) {
       const jsonArr = JSON.parse(data);
       setData(jsonArr);
@@ -49,7 +49,7 @@ export function Grouping() {
       (async () => {
         const resp = await fetch('/api/read');
         const jsonArr = await resp.json();
-        localStorage.setItem('data', JSON.stringify(jsonArr));
+        sessionStorage.setItem('data', JSON.stringify(jsonArr));
         setData(jsonArr);
       })()
     }
@@ -70,7 +70,7 @@ export function Grouping() {
   }
 
   const setData = (jsonArr: any) => {
-    const newRows = jsonArr.map((e: any, i: number) => ({ ...e, CloseDay: moment(e.CloseTime).format('ddd, YYYY-MM-DD'), Id: i, Duration_In_Days: moment(e.CloseTime).diff(moment(e.OpenTime), 'days') + 1 })).filter((i: any) => i.Type !== 'Balance');
+    const newRows = jsonArr.map((e: any, i: number) => ({ ...e, CloseDay: moment(e.CloseTime).format('ddd, YYYY-MM-DD'), Id: i, Duration_In_Days: moment(e.CloseTime).diff(moment(e.OpenTime), 'days') + 1 }))//.filter((i: any) => i.Type !== 'Balance');
     setColumns(Object.keys(newRows[0]).filter(i => !['Id', 'S/L', 'T/P', 'Commission', 'Swap'].includes(i)).map(i => ({
       key: i, name: i,
       groupFormatter: i === 'Profit' ? ({ childRows }: { childRows: any }) => {
@@ -99,7 +99,7 @@ export function Grouping() {
     formData.append('csvFile', file);
     const resp = await fetch('/api/upload', { method: 'post', body: formData });
     const jsonArr = await resp.json();
-    localStorage.setItem('data', JSON.stringify(jsonArr));
+    sessionStorage.setItem('data', JSON.stringify(jsonArr));
     setData(jsonArr);
   }
 
